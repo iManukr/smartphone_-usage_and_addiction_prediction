@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 
 import joblib
@@ -26,6 +27,12 @@ MODEL_PATH = Path(__file__).parent / "models" / "smartphone_addiction_model.jobl
 model = joblib.load(MODEL_PATH)
 
 INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text()
+
+# In-memory only: resets on every restart/redeploy (Render free tier has no
+# persistent disk). Good enough for "predictions this session," not a
+# lifetime total.
+_prediction_count = 0
+_prediction_count_lock = threading.Lock()
 
 FEATURES = [
     "age",
@@ -94,11 +101,21 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/stats")
+def stats():
+    return {"predictions_since_restart": _prediction_count}
+
+
 @app.post("/predict", response_model=PredictionOutput)
 def predict(input_data: UsageInput):
+    global _prediction_count
+
     row = pd.DataFrame([input_data.model_dump()])[FEATURES]
     prediction = int(model.predict(row)[0])
     probabilities = model.predict_proba(row)[0]
+
+    with _prediction_count_lock:
+        _prediction_count += 1
 
     return PredictionOutput(
         addicted=bool(prediction),

@@ -157,6 +157,7 @@
   #error { color: var(--high); margin-top: 12px; font-size: 0.9rem; display: none; }
   footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 28px; }
   footer a { color: var(--accent-dark); }
+  #statsLine { display: block; margin-bottom: 6px; font-weight: 600; }
 
   /* Result popup */
   dialog#resultDialog {
@@ -278,7 +279,10 @@
     <div id="error"></div>
   </div>
 
-  <footer>Model trained in scikit-learn &middot; served via FastAPI &middot; <a href="/docs">API docs</a></footer>
+  <footer>
+    <span id="statsLine"></span>
+    Model trained in scikit-learn &middot; served via FastAPI &middot; <a href="/docs">API docs</a>
+  </footer>
 </div>
 
 <dialog id="resultDialog">
@@ -321,8 +325,20 @@
   const popupSub = document.getElementById("popupSub");
   const bar = document.getElementById("bar");
   const popupClose = document.getElementById("popupClose");
+  const statsLine = document.getElementById("statsLine");
 
   popupClose.addEventListener("click", () => resultDialog.close());
+
+  async function refreshStats() {
+    try {
+      const res = await fetch("/stats");
+      if (!res.ok) return;
+      const data = await res.json();
+      const n = data.predictions_since_restart;
+      statsLine.textContent = `${n} prediction${n === 1 ? "" : "s"} made since this server last restarted`;
+    } catch (e) { /* stats are a nice-to-have, fail silently */ }
+  }
+  refreshStats();
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -361,6 +377,7 @@
       popupSub.textContent = `${pct}% predicted probability of addiction risk`;
       bar.style.width = pct + "%";
       resultDialog.showModal();
+      refreshStats();
     } catch (err) {
       errorEl.textContent = "Something went wrong reaching the API: " + err.message;
       errorEl.style.display = "block";
