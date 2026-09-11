@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Environment / secrets
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Deploy tooling
+.vercel/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Defensive: exclude any AI-assistant tooling artifacts, in case they ever appear
+.claude/
+CLAUDE.md

@@ -1,0 +1,13 @@
+[project]
+name = "smartphone-addiction-api"
+version = "0.1.0"
+description = "FastAPI service serving the trained smartphone addiction risk pipeline"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "joblib>=1.5.3",
+    "pandas>=3.0.5",
+    "scikit-learn>=1.9.0",
+    "uvicorn>=0.52.4",
+]
