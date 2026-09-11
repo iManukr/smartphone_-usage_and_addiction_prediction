@@ -4,8 +4,12 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Smartphone Addiction Risk Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap" rel="stylesheet">
 <style>
   :root {
+    color-scheme: light;
     --bg: #f2ead9;          /* beige */
     --card: #fbf7ee;        /* warm off-white card */
     --text: #24301f;       /* deep forest text */
@@ -15,6 +19,32 @@
     --accent-dark: #12332a;
     --low: #2f6b3a;
     --high: #a0522d;        /* warm sienna, reads clearly against green theme */
+    --grad-1: rgba(27, 67, 50, 0.16);
+    --grad-2: rgba(47, 107, 58, 0.14);
+    --grad-3: rgba(160, 82, 45, 0.10);
+    --grad-4: rgba(27, 67, 50, 0.12);
+    --toggle-bg: #ffffff;
+    --warm: #c8863c;
+    --warm-glow: rgba(200, 134, 60, 0.25);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #16201a;
+    --card: #1f2c23;
+    --text: #ece6d6;
+    --muted: #a9b39c;
+    --border: #35473c;
+    --accent: #4a9463;
+    --accent-dark: #6bbf85;
+    --low: #4a9463;
+    --high: #d38b5c;
+    --grad-1: rgba(74, 148, 99, 0.18);
+    --grad-2: rgba(107, 191, 133, 0.12);
+    --grad-3: rgba(211, 139, 92, 0.10);
+    --grad-4: rgba(74, 148, 99, 0.14);
+    --toggle-bg: #2a3a2f;
+    --warm: #e0a868;
+    --warm-glow: rgba(224, 168, 104, 0.25);
   }
   * { box-sizing: border-box; }
   body {
@@ -25,52 +55,94 @@
     padding: 48px 20px 80px;
     background-color: var(--bg);
     background-image:
-      radial-gradient(circle at 15% 10%, rgba(27, 67, 50, 0.16) 0%, transparent 45%),
-      radial-gradient(circle at 85% 0%, rgba(47, 107, 58, 0.14) 0%, transparent 40%),
-      radial-gradient(circle at 90% 85%, rgba(160, 82, 45, 0.10) 0%, transparent 40%),
-      radial-gradient(circle at 5% 90%, rgba(27, 67, 50, 0.12) 0%, transparent 40%);
+      radial-gradient(circle at 15% 10%, var(--grad-1) 0%, transparent 45%),
+      radial-gradient(circle at 85% 0%, var(--grad-2) 0%, transparent 40%),
+      radial-gradient(circle at 90% 85%, var(--grad-3) 0%, transparent 40%),
+      radial-gradient(circle at 5% 90%, var(--grad-4) 0%, transparent 40%);
     background-attachment: fixed;
     background-size: cover;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
   .wrap { max-width: 660px; margin: 0 auto; }
-  h1 { font-size: 1.7rem; margin-bottom: 4px; color: var(--accent-dark); }
-  p.sub { color: var(--muted); margin-top: 0; font-size: 0.9rem; }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0 0 6px;
+    color: var(--accent-dark);
+    letter-spacing: -0.01em;
+  }
+  p.sub { color: var(--muted); margin-top: 0; font-size: 0.95rem; }
+  .theme-toggle {
+    flex-shrink: 0;
+    margin-top: 0;
+    width: auto;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--toggle-bg);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .theme-toggle:hover:not(:disabled) { background: var(--border); }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 36px 32px;
     margin-top: 24px;
-    box-shadow: 0 8px 28px rgba(27, 67, 50, 0.10);
+    box-shadow: 0 10px 32px rgba(160, 110, 60, 0.12), 0 2px 8px rgba(27, 67, 50, 0.08);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr; }
+    body { padding: 28px 14px 60px; }
+    .card { padding: 24px 20px; }
+    h1 { font-size: 1.6rem; }
+  }
   label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--muted); }
   input, select {
     width: 100%;
-    padding: 9px 10px;
-    border-radius: 8px;
+    padding: 10px 10px;
+    border-radius: 10px;
     border: 1px solid var(--border);
-    background: #fff;
+    background: var(--card);
     color: var(--text);
-    font-size: 0.95rem;
+    font-size: 1rem; /* 16px avoids iOS auto-zoom on focus */
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
   }
-  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--warm);
+    box-shadow: 0 0 0 3px var(--warm-glow);
+  }
   button {
     margin-top: 18px;
     width: 100%;
     padding: 13px;
     border: none;
-    border-radius: 10px;
-    background: var(--accent);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     color: #fbf7ee;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  button:hover:not(:disabled) { background: var(--accent-dark); }
-  button:disabled { opacity: 0.6; cursor: default; }
+  button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px var(--warm-glow);
+  }
+  button:disabled { opacity: 0.6; cursor: default; transform: none; box-shadow: none; }
   .badge {
     display: inline-block;
     padding: 6px 14px;
@@ -89,19 +161,24 @@
   /* Result popup */
   dialog#resultDialog {
     border: none;
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 0;
     max-width: 360px;
     width: 90%;
     background: var(--card);
-    box-shadow: 0 12px 40px rgba(18, 51, 42, 0.25);
+    box-shadow: 0 16px 44px rgba(160, 110, 60, 0.20), 0 4px 14px rgba(18, 51, 42, 0.20);
   }
   dialog#resultDialog::backdrop {
     background: rgba(18, 51, 42, 0.45);
   }
-  .popup-inner { padding: 28px 24px; text-align: center; }
+  .popup-inner { padding: 30px 26px; text-align: center; }
   .popup-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 8px; }
-  .popup-heading { font-size: 1.3rem; font-weight: 700; margin: 4px 0; }
+  .popup-heading {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 4px 0;
+  }
   .popup-heading.low { color: var(--low); }
   .popup-heading.high { color: var(--high); }
   .popup-sub { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
@@ -110,20 +187,26 @@
     width: 100%;
     padding: 11px;
     border: none;
-    border-radius: 10px;
-    background: var(--accent);
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
     color: #fbf7ee;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .popup-close:hover { background: var(--accent-dark); }
+  .popup-close:hover { transform: translateY(-1px); box-shadow: 0 6px 16px var(--warm-glow); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Smartphone Addiction Risk Predictor</h1>
-  <p class="sub">Educational demo — enter daily habits to estimate addiction risk. Not a clinical diagnosis.</p>
+  <div class="header-row">
+    <div>
+      <h1>Smartphone Addiction Risk Predictor</h1>
+      <p class="sub">Pilot demo: enter daily habits to estimate addiction risk. Not a clinical diagnosis.</p>
+    </div>
+    <button type="button" class="theme-toggle" id="themeToggle">Dark mode</button>
+  </div>
 
   <div class="card">
     <form id="form">
@@ -209,6 +292,26 @@
 </dialog>
 
 <script>
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  }
+
+  (function initTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) { /* private mode etc. */ }
+    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(saved || (prefersDark ? "dark" : "light"));
+  })();
+
+  themeToggle.addEventListener("click", () => {
+    const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("theme", next); } catch (e) { /* ignore */ }
+  });
+
   const form = document.getElementById("form");
   const submitBtn = document.getElementById("submitBtn");
   const errorEl = document.getElementById("error");
