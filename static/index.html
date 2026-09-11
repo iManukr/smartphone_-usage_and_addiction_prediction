@@ -335,7 +335,9 @@
       if (!res.ok) return;
       const data = await res.json();
       const n = data.predictions_since_restart;
-      statsLine.textContent = `${n} prediction${n === 1 ? "" : "s"} made since this server last restarted`;
+      const v = data.unique_visitors_since_restart;
+      statsLine.textContent =
+        `${v} visitor${v === 1 ? "" : "s"}, ${n} prediction${n === 1 ? "" : "s"} since this server last restarted`;
     } catch (e) { /* stats are a nice-to-have, fail silently */ }
   }
   refreshStats();

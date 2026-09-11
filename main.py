@@ -3,7 +3,7 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -29,10 +29,23 @@ model = joblib.load(MODEL_PATH)
 INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text()
 
 # In-memory only: resets on every restart/redeploy (Render free tier has no
-# persistent disk). Good enough for "predictions this session," not a
-# lifetime total.
+# persistent disk). Good enough for "since this session," not a lifetime total.
 _prediction_count = 0
 _prediction_count_lock = threading.Lock()
+
+# Approximate unique visitors by client IP. Render sits behind Cloudflare, so
+# the real client IP is in X-Forwarded-For, not request.client.host (which
+# would just be Cloudflare's edge). Shared networks/VPNs undercount uniqueness
+# -- this is a rough signal, not precise analytics.
+_visitor_ips: set[str] = set()
+_visitor_ips_lock = threading.Lock()
+
+
+def _client_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 FEATURES = [
     "age",
@@ -92,7 +105,9 @@ class PredictionOutput(BaseModel):
 
 
 @app.get("/", include_in_schema=False, response_class=HTMLResponse)
-def root():
+def root(request: Request):
+    with _visitor_ips_lock:
+        _visitor_ips.add(_client_ip(request))
     return INDEX_HTML
 
 
@@ -103,7 +118,10 @@ def health():
 
 @app.get("/stats")
 def stats():
-    return {"predictions_since_restart": _prediction_count}
+    return {
+        "predictions_since_restart": _prediction_count,
+        "unique_visitors_since_restart": len(_visitor_ips),
+    }
 
 
 @app.post("/predict", response_model=PredictionOutput)
