@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 app = FastAPI(
@@ -23,6 +24,8 @@ app.add_middleware(
 
 MODEL_PATH = Path(__file__).parent / "models" / "smartphone_addiction_model.joblib"
 model = joblib.load(MODEL_PATH)
+
+INDEX_HTML = (Path(__file__).parent / "static" / "index.html").read_text()
 
 FEATURES = [
     "age",
@@ -79,6 +82,11 @@ class PredictionOutput(BaseModel):
     addicted_label: int
     probability_not_addicted: float
     probability_addicted: float
+
+
+@app.get("/", include_in_schema=False, response_class=HTMLResponse)
+def root():
+    return INDEX_HTML
 
 
 @app.get("/health")

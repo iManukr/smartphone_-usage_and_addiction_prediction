@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Smartphone Addiction Risk Predictor</title>
+<style>
+  :root {
+    --bg: #f2ead9;          /* beige */
+    --card: #fbf7ee;        /* warm off-white card */
+    --text: #24301f;       /* deep forest text */
+    --muted: #5c6b52;
+    --border: #d8cdb2;
+    --accent: #1b4332;      /* forest green */
+    --accent-dark: #12332a;
+    --low: #2f6b3a;
+    --high: #a0522d;        /* warm sienna, reads clearly against green theme */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 660px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 4px; color: var(--accent-dark); }
+  p.sub { color: var(--muted); margin-top: 0; font-size: 0.9rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-top: 16px;
+    box-shadow: 0 2px 10px rgba(27, 67, 50, 0.06);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--muted); }
+  input, select {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button {
+    margin-top: 18px;
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fbf7ee;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover:not(:disabled) { background: var(--accent-dark); }
+  button:disabled { opacity: 0.6; cursor: default; }
+  #result { margin-top: 18px; display: none; }
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    color: white;
+  }
+  .badge.low { background: var(--low); }
+  .badge.high { background: var(--high); }
+  .bar-track { background: var(--border); border-radius: 999px; height: 10px; margin-top: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
+  #error { color: var(--high); margin-top: 12px; font-size: 0.9rem; display: none; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 28px; }
+  footer a { color: var(--accent-dark); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📱 Smartphone Addiction Risk Predictor</h1>
+  <p class="sub">Educational demo — enter daily habits to estimate addiction risk. Not a clinical diagnosis.</p>
+
+  <div class="card">
+    <form id="form">
+      <div class="grid">
+        <div>
+          <label for="age">Age</label>
+          <input type="number" id="age" min="18" max="35" value="24" required />
+        </div>
+        <div>
+          <label for="gender">Gender</label>
+          <select id="gender">
+            <option>Female</option>
+            <option>Male</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="daily_screen_time_hours">Daily screen time (hrs)</label>
+          <input type="number" step="0.1" id="daily_screen_time_hours" min="3" max="12" value="8.2" required />
+        </div>
+        <div>
+          <label for="social_media_hours">Social media (hrs)</label>
+          <input type="number" step="0.1" id="social_media_hours" min="0.5" max="6" value="4.1" required />
+        </div>
+        <div>
+          <label for="gaming_hours">Gaming (hrs)</label>
+          <input type="number" step="0.1" id="gaming_hours" min="0" max="4" value="1.3" required />
+        </div>
+        <div>
+          <label for="work_study_hours">Work/study (hrs)</label>
+          <input type="number" step="0.1" id="work_study_hours" min="0.5" max="6" value="5.0" required />
+        </div>
+        <div>
+          <label for="sleep_hours">Sleep (hrs)</label>
+          <input type="number" step="0.1" id="sleep_hours" min="4.5" max="9" value="5.8" required />
+        </div>
+        <div>
+          <label for="weekend_screen_time">Weekend screen time (hrs)</label>
+          <input type="number" step="0.1" id="weekend_screen_time" min="3.6" max="14.9" value="9.0" required />
+        </div>
+        <div>
+          <label for="notifications_per_day">Notifications / day</label>
+          <input type="number" id="notifications_per_day" min="20" max="250" value="210" required />
+        </div>
+        <div>
+          <label for="app_opens_per_day">App opens / day</label>
+          <input type="number" id="app_opens_per_day" min="15" max="180" value="130" required />
+        </div>
+        <div>
+          <label for="stress_level">Stress level</label>
+          <select id="stress_level">
+            <option>Low</option>
+            <option>Medium</option>
+            <option selected>High</option>
+          </select>
+        </div>
+        <div>
+          <label for="academic_work_impact">Academic/work impact?</label>
+          <select id="academic_work_impact">
+            <option>No</option>
+            <option selected>Yes</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn">Predict risk</button>
+    </form>
+
+    <div id="error"></div>
+
+    <div id="result">
+      <div>
+        <span id="badge" class="badge"></span>
+        <span id="probText" style="margin-left:8px; color: var(--muted);"></span>
+      </div>
+      <div class="bar-track"><div id="bar" class="bar-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <footer>Model trained in scikit-learn &middot; served via FastAPI &middot; <a href="/docs">API docs</a></footer>
+</div>
+
+<script>
+  const form = document.getElementById("form");
+  const submitBtn = document.getElementById("submitBtn");
+  const resultEl = document.getElementById("result");
+  const errorEl = document.getElementById("error");
+  const badge = document.getElementById("badge");
+  const probText = document.getElementById("probText");
+  const bar = document.getElementById("bar");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorEl.style.display = "none";
+    resultEl.style.display = "none";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Predicting…";
+
+    const payload = {
+      age: Number(document.getElementById("age").value),
+      gender: document.getElementById("gender").value,
+      daily_screen_time_hours: Number(document.getElementById("daily_screen_time_hours").value),
+      social_media_hours: Number(document.getElementById("social_media_hours").value),
+      gaming_hours: Number(document.getElementById("gaming_hours").value),
+      work_study_hours: Number(document.getElementById("work_study_hours").value),
+      sleep_hours: Number(document.getElementById("sleep_hours").value),
+      notifications_per_day: Number(document.getElementById("notifications_per_day").value),
+      app_opens_per_day: Number(document.getElementById("app_opens_per_day").value),
+      weekend_screen_time: Number(document.getElementById("weekend_screen_time").value),
+      stress_level: document.getElementById("stress_level").value,
+      academic_work_impact: document.getElementById("academic_work_impact").value,
+    };
+
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`API returned ${res.status}`);
+      const data = await res.json();
+
+      const pct = Math.round(data.probability_addicted * 100);
+      badge.textContent = data.addicted ? "At risk" : "Low risk";
+      badge.className = "badge " + (data.addicted ? "high" : "low");
+      probText.textContent = `${pct}% predicted probability of addiction risk`;
+      bar.style.width = pct + "%";
+      resultEl.style.display = "block";
+    } catch (err) {
+      errorEl.textContent = "Something went wrong reaching the API: " + err.message;
+      errorEl.style.display = "block";
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Predict risk";
+    }
+  });
+</script>
+</body>
+</html>
