@@ -19,23 +19,31 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg);
+    min-height: 100vh;
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 24px 16px 60px;
+    padding: 48px 20px 80px;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(27, 67, 50, 0.16) 0%, transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(47, 107, 58, 0.14) 0%, transparent 40%),
+      radial-gradient(circle at 90% 85%, rgba(160, 82, 45, 0.10) 0%, transparent 40%),
+      radial-gradient(circle at 5% 90%, rgba(27, 67, 50, 0.12) 0%, transparent 40%);
+    background-attachment: fixed;
+    background-size: cover;
   }
   .wrap { max-width: 660px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin-bottom: 4px; color: var(--accent-dark); }
+  h1 { font-size: 1.7rem; margin-bottom: 4px; color: var(--accent-dark); }
   p.sub { color: var(--muted); margin-top: 0; font-size: 0.9rem; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px;
-    margin-top: 16px;
-    box-shadow: 0 2px 10px rgba(27, 67, 50, 0.06);
+    border-radius: 16px;
+    padding: 36px 32px;
+    margin-top: 24px;
+    box-shadow: 0 8px 28px rgba(27, 67, 50, 0.10);
   }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
   label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: var(--muted); }
   input, select {
@@ -63,7 +71,6 @@
   }
   button:hover:not(:disabled) { background: var(--accent-dark); }
   button:disabled { opacity: 0.6; cursor: default; }
-  #result { margin-top: 18px; display: none; }
   .badge {
     display: inline-block;
     padding: 6px 14px;
@@ -73,16 +80,49 @@
   }
   .badge.low { background: var(--low); }
   .badge.high { background: var(--high); }
-  .bar-track { background: var(--border); border-radius: 999px; height: 10px; margin-top: 10px; overflow: hidden; }
+  .bar-track { background: var(--border); border-radius: 999px; height: 10px; margin-top: 14px; overflow: hidden; }
   .bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
   #error { color: var(--high); margin-top: 12px; font-size: 0.9rem; display: none; }
   footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 28px; }
   footer a { color: var(--accent-dark); }
+
+  /* Result popup */
+  dialog#resultDialog {
+    border: none;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 360px;
+    width: 90%;
+    background: var(--card);
+    box-shadow: 0 12px 40px rgba(18, 51, 42, 0.25);
+  }
+  dialog#resultDialog::backdrop {
+    background: rgba(18, 51, 42, 0.45);
+  }
+  .popup-inner { padding: 28px 24px; text-align: center; }
+  .popup-icon { font-size: 2.4rem; line-height: 1; margin-bottom: 8px; }
+  .popup-heading { font-size: 1.3rem; font-weight: 700; margin: 4px 0; }
+  .popup-heading.low { color: var(--low); }
+  .popup-heading.high { color: var(--high); }
+  .popup-sub { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+  .popup-close {
+    margin-top: 20px;
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fbf7ee;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .popup-close:hover { background: var(--accent-dark); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>📱 Smartphone Addiction Risk Predictor</h1>
+  <h1>Smartphone Addiction Risk Predictor</h1>
   <p class="sub">Educational demo — enter daily habits to estimate addiction risk. Not a clinical diagnosis.</p>
 
   <div class="card">
@@ -153,32 +193,37 @@
     </form>
 
     <div id="error"></div>
-
-    <div id="result">
-      <div>
-        <span id="badge" class="badge"></span>
-        <span id="probText" style="margin-left:8px; color: var(--muted);"></span>
-      </div>
-      <div class="bar-track"><div id="bar" class="bar-fill" style="width:0%"></div></div>
-    </div>
   </div>
 
   <footer>Model trained in scikit-learn &middot; served via FastAPI &middot; <a href="/docs">API docs</a></footer>
 </div>
 
+<dialog id="resultDialog">
+  <div class="popup-inner">
+    <div class="popup-icon" id="popupIcon"></div>
+    <div class="popup-heading" id="popupHeading"></div>
+    <div class="popup-sub" id="popupSub"></div>
+    <div class="bar-track"><div id="bar" class="bar-fill" style="width:0%"></div></div>
+    <button class="popup-close" id="popupClose">Close</button>
+  </div>
+</dialog>
+
 <script>
   const form = document.getElementById("form");
   const submitBtn = document.getElementById("submitBtn");
-  const resultEl = document.getElementById("result");
   const errorEl = document.getElementById("error");
-  const badge = document.getElementById("badge");
-  const probText = document.getElementById("probText");
+  const resultDialog = document.getElementById("resultDialog");
+  const popupIcon = document.getElementById("popupIcon");
+  const popupHeading = document.getElementById("popupHeading");
+  const popupSub = document.getElementById("popupSub");
   const bar = document.getElementById("bar");
+  const popupClose = document.getElementById("popupClose");
+
+  popupClose.addEventListener("click", () => resultDialog.close());
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errorEl.style.display = "none";
-    resultEl.style.display = "none";
     submitBtn.disabled = true;
     submitBtn.textContent = "Predicting…";
 
@@ -207,11 +252,12 @@
       const data = await res.json();
 
       const pct = Math.round(data.probability_addicted * 100);
-      badge.textContent = data.addicted ? "At risk" : "Low risk";
-      badge.className = "badge " + (data.addicted ? "high" : "low");
-      probText.textContent = `${pct}% predicted probability of addiction risk`;
+      popupIcon.textContent = data.addicted ? "⚠️" : "✅";
+      popupHeading.textContent = data.addicted ? "You're at risk" : "You're not at risk";
+      popupHeading.className = "popup-heading " + (data.addicted ? "high" : "low");
+      popupSub.textContent = `${pct}% predicted probability of addiction risk`;
       bar.style.width = pct + "%";
-      resultEl.style.display = "block";
+      resultDialog.showModal();
     } catch (err) {
       errorEl.textContent = "Something went wrong reaching the API: " + err.message;
       errorEl.style.display = "block";
